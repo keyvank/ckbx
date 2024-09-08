@@ -1,0 +1,84 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlipFlop</title>
+
+    <style>
+        center {
+            padding: 0;
+            margin: 0;
+            width: 96%;
+        }
+
+        input {
+            padding: 0;
+            margin: 0;
+            width: 2vw;
+            height: 2.5vh;
+        }
+
+        div {
+            padding: 1px;
+        }
+    </style>
+    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
+</head>
+
+<body>
+
+    <center>
+        <h3>FlipFlop</h3>
+        <hr>
+    </center>
+
+    <script>
+        function setProvider(url) {
+            localStorage.setItem("provider-url", url);
+        }
+
+        if (!localStorage.getItem("provider-url")) {
+            setProvider("https://eth.llamarpc.com");
+        }
+
+        function getProvider() {
+            let url = localStorage.getItem("provider-url");
+            return new ethers.providers.JsonRpcProvider(url);
+        }
+
+        async function sample() {
+            let provider = new ethers.providers.JsonRpcProvider("https://eth.llamarpc.com");
+            jobs = [provider.getNetwork(), provider.getBlockNumber()];
+            [network, blockNumber] = await Promise.all(jobs);
+            console.log(network);
+            console.log(blockNumber);
+        }
+
+        sample();
+
+        for (let i = 0; i < 32; i++) {
+            let div = document.createElement("div");
+            div.id = `div${i}`;
+            for (let j = 0; j < 32; j++) {
+                let input = document.createElement("input");
+                input.type = "checkbox";
+                input.name = `c${i * 32 + j}`;
+                input.id = `c${i * 32 + j}`;
+                input.addEventListener(
+                    "change",
+                    function () {
+                        console.log(`c${i * 32 + j} is ${input.checked}`);
+                    }
+                );
+
+                div.appendChild(input);
+            }
+            document.getElementsByTagName("center")[0].appendChild(div);
+        }
+
+        // const signer = provider.getSigner();    
+    </script>
+</body>
+
+</html>
