@@ -7,7 +7,7 @@ import {FlipFlop} from "../src/FlipFlop.sol";
 contract FlipFlopTest is Test {
     function setUp() public {}
 
-    function test_Increment() public {
+    function test_wins() public {
         FlipFlop f = new FlipFlop(3, 1 ether);
         f.flip{value: 1 ether}(0);
         f.flip{value: 1 ether}(1);
@@ -15,4 +15,7 @@ contract FlipFlopTest is Test {
         f.flip{value: 1 ether}(2);
         f.flip{value: 1 ether}(1);
     }
+
+    // Allow the game contract to pay back the test contract
+    receive() external payable {}
 }
