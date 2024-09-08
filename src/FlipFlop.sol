@@ -27,15 +27,16 @@ contract FlipFlop is ERC20 {
         require(ind < numCheckboxes, "Invalid checkbox!");
 
         checkboxes[ind] = !checkboxes[ind];
-        if(owners[ind] == address(0)) {
+        if (owners[ind] == address(0)) {
             owners[ind] = msg.sender;
             _mint(msg.sender, 1);
         }
 
-        if(checkboxes[ind]) {
+        if (checkboxes[ind]) {
             totalChecked += 1;
-            if(totalChecked == numCheckboxes) {
+            if (totalChecked == numCheckboxes) {
                 winner = msg.sender;
+                payable(winner).transfer(address(this).balance / 2);
             }
         } else {
             totalChecked -= 1;
@@ -44,7 +45,7 @@ contract FlipFlop is ERC20 {
 
     function checkOut() public {
         require(winner != address(0), "Game has not ended yet!");
-        
+
         uint256 bal = balanceOf(msg.sender);
         _burn(msg.sender, bal);
         uint256 eth = address(this).balance * bal / numCheckboxes;
