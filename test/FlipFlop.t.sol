@@ -9,11 +9,11 @@ contract FlipFlopTest is Test {
     }
 
     function test_Increment() public {
-        FlipFlop f = new FlipFlop(3);
-        f.flip(0);
-        f.flip(1);
-        f.flip(1);
-        f.flip(2);
-        f.flip(1);
+        FlipFlop f = new FlipFlop(3, 1);
+        f.flip{value: 1}(0);
+        f.flip{value: 1}(1);
+        f.flip{value: 1}(1);
+        f.flip{value: 1}(2);
+        f.flip{value: 1}(1);
     }
 }
