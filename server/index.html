@@ -22,6 +22,26 @@
         div {
             padding: 1px;
         }
+
+        h3 {
+            padding: 0;
+            margin: 0;
+        }
+
+        #page-container {
+            display: flex;
+            justify-content: right;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+            height: 20px;
+        }
+
+        #page {
+            width: 50px;
+            height: 20px;
+        }
+
     </style>
     <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
 </head>
@@ -30,6 +50,10 @@
 
     <center>
         <h3>FlipFlop</h3>
+        <div id="page-container">
+            <p>page:</p>
+            <input type="number" min="1" max="32" name="page" placeholder="page" id="page" value="1">
+        </div>
         <hr>
     </center>
 
@@ -76,6 +100,14 @@
             }
             document.getElementsByTagName("center")[0].appendChild(div);
         }
+
+        document.getElementById("page").addEventListener(
+            "change",
+            function () {
+                let page = document.getElementById("page").value;
+                console.log(`page is ${page}`);
+            }
+        );
 
         // const signer = provider.getSigner();    
     </script>
