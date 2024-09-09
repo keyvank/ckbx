@@ -17,6 +17,8 @@ contract FlipFlop is ERC20 {
     }
 
     constructor(uint256 _numCheckboxes, uint256 _checkboxPrice) ERC20("Checkbox!", "CKBX") {
+        require(_numCheckboxes > 0, "Invalid number of checkboxes!");
+        require(_numCheckboxes % 1024 == 0, "Number of checkboxes must be a multiple of 1024!");
         numCheckboxes = _numCheckboxes;
         checkboxPrice = _checkboxPrice;
     }
@@ -41,6 +43,22 @@ contract FlipFlop is ERC20 {
         } else {
             totalChecked -= 1;
         }
+    }
+
+    function getState(uint256 page) public view returns (bool[] memory) {
+        require(page < numCheckboxes / 1024, "Invalid page number!");
+        uint256 start = page * 1024;
+        uint256 end = start + 1024;
+        if (end > numCheckboxes) {
+            end = numCheckboxes;
+        }
+
+        bool[] memory states = new bool[](end - start);
+        for (uint256 i = start; i < end; i++) {
+            states[i - start] = checkboxes[i];
+        }
+
+        return states;
     }
 
     function checkOut() public {

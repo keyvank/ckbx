@@ -46,7 +46,6 @@
             width: 250px;
             height: 20px;
         }
-
     </style>
     <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
 </head>
@@ -60,7 +59,8 @@
             <input type="number" min="1" max="32" name="page" placeholder="page" id="page" value="1">
             &nbsp;|&nbsp;
             <p>web3 provider:&nbsp;</p>
-            <input type="url" name="provider" placeholder="web3 provider" id="provider" value="https://eth.llamarpc.com">
+            <input type="url" name="provider" placeholder="web3 provider" id="provider"
+                value="https://eth.llamarpc.com">
         </div>
         <hr>
     </center>
@@ -78,6 +78,25 @@
             let url = localStorage.getItem("provider-url");
             return new ethers.providers.JsonRpcProvider(url);
         }
+
+        async function connectWallet() {
+            if (!localStorage.getItem("connected")) {
+                // const provider = getProvider()
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                await provider.send('eth_requestAccounts', []); 
+                const signer = await provider.getSigner();
+                const _walletAddress = await signer.getAddress();
+
+                localStorage.setItem("connected", "true");
+                localStorage.setItem("walletAddress", _walletAddress);
+            } else {
+                window.ethereum.selectedAddress = null;
+                
+                localStorage.removeItem("connected");
+                localStorage.removeItem("walletAddress");
+            }
+        }
+        connectWallet();
 
         async function sample() {
             let provider = new ethers.providers.JsonRpcProvider("https://eth.llamarpc.com");
