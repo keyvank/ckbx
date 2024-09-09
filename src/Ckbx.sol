@@ -3,20 +3,20 @@ pragma solidity ^0.8.13;
 
 import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 
-contract FlipFlop is ERC20 {
+contract Ckbx is ERC20 {
     uint256 numCheckboxes;
     uint256 checkboxPrice;
 
     uint256 totalChecked;
     address winner;
     mapping(uint256 => bool) checkboxes;
-    mapping(uint256 => address) owners;
+    mapping(uint256 => uint256) counter;
 
     function decimals() public view virtual override returns (uint8) {
-        return 0;
+        return 3;
     }
 
-    constructor(uint256 _numCheckboxes, uint256 _checkboxPrice) ERC20("Checkbox!", "CKBX") {
+    constructor(uint256 _numCheckboxes, uint256 _checkboxPrice) ERC20("ckbx.io", "CKBX") {
         require(_numCheckboxes > 0, "Invalid number of checkboxes!");
         require(_numCheckboxes % 1024 == 0, "Number of checkboxes must be a multiple of 1024!");
         numCheckboxes = _numCheckboxes;
@@ -29,10 +29,8 @@ contract FlipFlop is ERC20 {
         require(ind < numCheckboxes, "Invalid checkbox!");
 
         checkboxes[ind] = !checkboxes[ind];
-        if (owners[ind] == address(0)) {
-            owners[ind] = msg.sender;
-            _mint(msg.sender, 1);
-        }
+        _mint(msg.sender, 1000 >> counter[ind]);
+        counter[ind] += 1;
 
         if (checkboxes[ind]) {
             totalChecked += 1;
@@ -65,8 +63,8 @@ contract FlipFlop is ERC20 {
         require(winner != address(0), "Game has not ended yet!");
 
         uint256 bal = balanceOf(msg.sender);
+        uint256 eth = address(this).balance * bal / totalSupply();
         _burn(msg.sender, bal);
-        uint256 eth = address(this).balance * bal / numCheckboxes;
         payable(msg.sender).transfer(eth);
     }
 }
