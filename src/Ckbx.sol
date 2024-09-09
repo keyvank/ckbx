@@ -9,7 +9,6 @@ contract Ckbx is ERC20 {
 
     uint256 totalChecked;
     address winner;
-    mapping(uint256 => bool) checkboxes;
     mapping(uint256 => uint256) counter;
 
     function decimals() public view virtual override returns (uint8) {
@@ -28,11 +27,10 @@ contract Ckbx is ERC20 {
         require(winner == address(0), "The game has ended!");
         require(ind < numCheckboxes, "Invalid checkbox!");
 
-        checkboxes[ind] = !checkboxes[ind];
         _mint(msg.sender, 1000 >> counter[ind]);
         counter[ind] += 1;
 
-        if (checkboxes[ind]) {
+        if (counter[ind] % 2 == 1) {
             totalChecked += 1;
             if (totalChecked == numCheckboxes) {
                 winner = msg.sender;
@@ -43,7 +41,7 @@ contract Ckbx is ERC20 {
         }
     }
 
-    function getState(uint256 page) public view returns (bool[] memory) {
+    function getState(uint256 page) public view returns (uint[] memory) {
         require(page < numCheckboxes / 1024, "Invalid page number!");
         uint256 start = page * 1024;
         uint256 end = start + 1024;
@@ -51,9 +49,9 @@ contract Ckbx is ERC20 {
             end = numCheckboxes;
         }
 
-        bool[] memory states = new bool[](end - start);
+        uint[] memory states = new uint[](end - start);
         for (uint256 i = start; i < end; i++) {
-            states[i - start] = checkboxes[i];
+            states[i - start] = counter[i];
         }
 
         return states;
