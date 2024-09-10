@@ -88,13 +88,13 @@
                 <!-- web3 provider -->
                 <p style="display: inline-block;">Web3 Provider:
                     <input type="url" name="provider" placeholder="web3 provider" id="provider"
-                        value="http://localhost:8545" list="providers">
-                    <datalist id="providers">
+                        value="https://arb1.arbitrum.io/rpc" list="providers">
+                    <!-- <datalist id="providers">
                         <option>https://eth.llamarpc.com</option>
                         <option>http://localhost:8545</option>
                         <option>X3</option>
                         <option>X4</option>
-                    </datalist>
+                    </datalist> -->
                 </p>
             </div>
             <div class="col-2">
@@ -223,20 +223,20 @@
             await window.ethereum.request({
                 method: 'wallet_addEthereumChain',
                 params: [{
-                    chainId: '0x539',
-                    chainName: 'Ganache Chain',
+                    chainId: '0xA4B1',
+                    chainName: 'Arbitrum',
                     nativeCurrency: {
                         name: 'Ethereum',
                         symbol: 'ETH',
                         decimals: 18
                     },
-                    rpcUrls: ['http://localhost:8545'],
-                    blockExplorerUrls: ['http://localhost:8545/explorer']
+                    rpcUrls: ['https://arb1.arbitrum.io/rpc'],
+                    blockExplorerUrls: ['https://arbiscan.io']
                 }],
             });
             await window.ethereum.request({
                 method: 'wallet_switchEthereumChain',
-                params: [{ chainId: '0x539' }],
+                params: [{ chainId: '0xA4B1' }],
             });
         }
 
