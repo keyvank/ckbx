@@ -2,27 +2,21 @@
 pragma solidity ^0.8.13;
 
 import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
-import "./Console.sol";
 
 contract Ckbx is ERC20 {
-    uint256 numCheckboxes;
-    uint256 checkboxPrice;
-
-    uint256 totalChecked;
-    address winner;
-    mapping(uint256 => uint256) counter;
+    uint256 public numCheckboxes;
+    uint256 public checkboxPrice;
+    uint256 public totalChecked;
+    address public winner;
+    mapping(uint256 => uint256) public counter;
 
     constructor(uint256 _numCheckboxes, uint256 _checkboxPrice) ERC20("ckbx.io", "CKBX") {
         require(_numCheckboxes > 0, "Invalid number of checkboxes!");
-        require(_numCheckboxes % 1024 == 0, "Number of checkboxes must be a multiple of 1024!");
         numCheckboxes = _numCheckboxes;
         checkboxPrice = _checkboxPrice;
     }
 
-    function flip(uint256[] calldata indices) public payable {
-        console.log(msg.sender);
-        console.log(msg.value);
-        console.log(checkboxPrice);
+    function flip(uint256[] memory indices) public payable {
         require(msg.value == checkboxPrice * indices.length, "Invalid amount of ETH!");
         require(winner == address(0), "The game has ended!");
 
@@ -54,12 +48,14 @@ contract Ckbx is ERC20 {
         return state;
     }
 
-    function checkOut() public {
+    function checkOut() public returns (uint256) {
         require(winner != address(0), "Game has not ended yet!");
 
         uint256 bal = balanceOf(msg.sender);
         uint256 eth = address(this).balance * bal / totalSupply();
         _burn(msg.sender, bal);
         payable(msg.sender).transfer(eth);
+
+        return eth;
     }
 }
