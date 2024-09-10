@@ -284,7 +284,7 @@
                 value: ethers.utils.hexlify(ethers.utils.parseEther((priceCKBX * idxs.length).toString())), // Only required to send ether to the recipient from the initiating external account.
                 data: data, // Optional, but used for defining smart contract creation and interaction.
                 // chainId: GlobalConstants.chain, // Used to prevent transaction reuse across blockchains. Auto-filled by MetaMask.
-                chainId: 1337,
+                chainId: 42161,
             }
 
             console.log(transactionParameters);
