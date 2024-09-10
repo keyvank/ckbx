@@ -50,6 +50,7 @@
             align-items: center;
             float: right;
             } */
+
         #page {
             width: 50px;
             height: 20px;
@@ -58,6 +59,15 @@
         #provider {
             width: 250px;
             height: 20px;
+        }
+
+        #flip {
+            width: 80px;
+        }
+
+        .selected {
+            border: 1px solid yellow;
+            background-color: aqua;
         }
     </style>
     <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
@@ -78,10 +88,10 @@
                 <!-- web3 provider -->
                 <p style="display: inline-block;">Web3 Provider:
                     <input type="url" name="provider" placeholder="web3 provider" id="provider"
-                        value="https://eth.llamarpc.com" list="providers">
+                        value="http://localhost:8545" list="providers">
                     <datalist id="providers">
                         <option>https://eth.llamarpc.com</option>
-                        <option>X2</option>
+                        <option>http://localhost:8545</option>
                         <option>X3</option>
                         <option>X4</option>
                     </datalist>
@@ -102,6 +112,12 @@
             <button id="connect">connect</button>
         </div> -->
         <hr>
+        <div class="row justify-content-end">
+            <div id="render" class="col-11"></div>
+            <div class="col-1">
+                <button id="flip" class="btn btn-primary btn-sm">flip</button>
+            </div>
+        </div>
     </center>
 
     <script>
@@ -110,11 +126,13 @@
         }
 
         if (!localStorage.getItem("provider-url")) {
-            setProvider("https://eth.llamarpc.com");
+            let url = document.getElementById("provider").value;
+            setProvider(url);
         }
 
         function getProvider() {
             let url = localStorage.getItem("provider-url");
+            console.log("getProvider", url);
             return new ethers.providers.JsonRpcProvider(url);
         }
 
@@ -145,14 +163,6 @@
             connectWallet();
         }
 
-        async function sample() {
-            let provider = new ethers.providers.JsonRpcProvider("https://eth.llamarpc.com");
-            jobs = [provider.getNetwork(), provider.getBlockNumber()];
-            [network, blockNumber] = await Promise.all(jobs);
-            console.log(network);
-            console.log(blockNumber);
-        }
-
         for (let i = 0; i < 32; i++) {
             let div = document.createElement("div");
             div.id = `div${i}`;
@@ -165,12 +175,26 @@
                     "change",
                     function () {
                         console.log(`c${i * 32 + j} is ${input.checked}`);
+
+                        let last_state = localStorage.getItem("last-state");
+                        last_state = last_state.split(",").map(function (x) { return x === "1" });
+
+                        let idx = i * 32 + j;
+                        if (last_state[idx] !== input.checked) {
+                            document.getElementById(`container_${i * 32 + j}`).classList.add("selected");
+                        }
+
+                        // localStorage.setItem(`c${idx}`, input.checked);
                     }
                 );
 
-                div.appendChild(input);
+                let container = document.createElement("div");
+                container.id = `container_${i * 32 + j}`;
+                container.style = "display: inline-block;";
+                container.appendChild(input);
+                div.appendChild(container);
             }
-            document.getElementsByTagName("center")[0].appendChild(div);
+            document.getElementById("render").appendChild(div);
         }
 
         document.getElementById("page").addEventListener(
@@ -216,7 +240,7 @@
             });
         }
 
-        const contractAddress = "0x45F97e4bEe19580807501C32a71D06f7F7c72f4f";
+        const contractAddress = "0x9C9848fDd94812445E250230aCf271FF9642DeC2";
 
         function getContract() {
             const provider = getProvider();
@@ -234,21 +258,22 @@
         async function getState(page) {
             const contract = getContract();
             const state = await contract.getState(page);
+            localStorage.setItem("last-state", state);
+            localStorage.setItem("last-page", page);
             return state;
         }
 
-        async function flip(idx) {              
+        async function flip(idx) {
             page = parseInt(document.getElementById("page").value);
             const contract = getContract();
-            
+
             let _walletAddress = localStorage.getItem("walletAddress");
-            console.log("salam", _walletAddress);
-            
+
             // const balance = await window.ethereum.request({method: 'eth_getBalance'})
             // const provider = new ethers.providers.Web3Provider(window.ethereum);
             let provider = getProvider();
             let balance = await provider.getBalance(_walletAddress);
-            console.log("bal", balance.toBigInt()); 
+            console.log("bal", balance.toBigInt());
 
             let data = contract.interface.encodeFunctionData("flip", [idx]);
             const transactionParameters = {
@@ -295,8 +320,50 @@
                 const balance = await getBalance();
                 console.log("BalanceOf CKBX: ", balance.toString());
             }
+            await updateState();
         });
 
+        async function updateState() {
+            console.log("get state");
+            let pageNum = parseInt(document.getElementById("page").value) - 1;
+            getState(pageNum).then((state) => {
+                for (let i = 0; i < 32; i++) {
+                    for (let j = 0; j < 32; j++) {
+                        let idx = i * 32 + j;
+                        let checked = state[idx].mod(2) == 1;
+
+                        if (document.getElementById(`container_${idx}`).classList.contains("selected") &&
+                            document.getElementById(`c${idx}`).checked === checked) {
+                            document.getElementById(`container_${idx}`).classList.remove("selected");
+                        } else if (document.getElementById(`container_${idx}`).classList.contains("selected") &&
+                            document.getElementById(`c${idx}`).checked !== checked) {
+                            continue
+                        }
+                        document.getElementById(`c${idx}`).checked = checked;
+                    }
+                }
+            });
+        }
+
+        document.getElementById("page").addEventListener("change", updateState);
+
+        setInterval(async () => {
+            await updateState()
+        }, 10000);
+
+        document.getElementById("flip").addEventListener("click", async () => {
+            let last_state = localStorage.getItem("last-state");
+            last_state = last_state.split(",").map(function (x) { return x === "1" });
+
+            for (let i = 0; i < 32; i++) {
+                for (let j = 0; j < 32; j++) {
+                    let idx = i * 32 + j;
+                    if (last_state[idx] !== document.getElementById(`c${idx}`).checked && document.getElementById(`container_${idx}`).classList.contains("selected")) {
+                        await flip(idx);
+                    }
+                }
+            }
+        });
     </script>
 </body>
 
