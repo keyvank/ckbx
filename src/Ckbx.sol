@@ -20,12 +20,11 @@ contract Ckbx is ERC20 {
     }
 
     function flip(uint256[] calldata indices) public payable {
-        require(msg.value == checkboxPrice * indices.length, "Invalid amount of ETH!");
-        require(winner == address(0), "The game has ended!");
-
         console.log(msg.sender);
         console.log(msg.value);
         console.log(checkboxPrice);
+        require(msg.value == checkboxPrice * indices.length, "Invalid amount of ETH!");
+        require(winner == address(0), "The game has ended!");
 
         for (uint256 i = 0; i < indices.length; i++) {
             uint256 ind = indices[i];

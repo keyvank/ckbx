@@ -52,7 +52,7 @@
             } */
 
         #page {
-            width: 50px;
+            width: 70px;
             height: 20px;
         }
 
@@ -240,7 +240,8 @@
             });
         }
 
-        const contractAddress = "0x9C9848fDd94812445E250230aCf271FF9642DeC2";
+        const contractAddress = "0x3E5F619487FB074BEE52AA7764cCB51d9c0c2f17";
+        const priceCKBX = 0.0005;
 
         function getContract() {
             const provider = getProvider();
@@ -255,15 +256,15 @@
             return balance;
         }
 
-        async function getState(page) {
+        async function getState(page, count) {
             const contract = getContract();
-            const state = await contract.getState(page);
+            const state = await contract.getState(page, count);
             localStorage.setItem("last-state", state);
-            localStorage.setItem("last-page", page);
+            localStorage.setItem("last-page", page / 1024 + 1);
             return state;
         }
 
-        async function flip(idx) {
+        async function flip(idxs) {
             page = parseInt(document.getElementById("page").value);
             const contract = getContract();
 
@@ -273,16 +274,14 @@
             // const provider = new ethers.providers.Web3Provider(window.ethereum);
             let provider = getProvider();
             let balance = await provider.getBalance(_walletAddress);
-            console.log("bal", balance.toBigInt());
-
-            let data = contract.interface.encodeFunctionData("flip", [idx]);
+            let data = contract.interface.encodeFunctionData("flip", [idxs]);
             const transactionParameters = {
                 // nonce: '0x00', // ignored by MetaMask
                 // gasPrice: ethers.utils.hexlify(ethers.utils.parseEther(GlobalConstants.gasPrice)), // customizable by user during MetaMask confirmation.
                 // gas: GlobalConstants.gas, // customizable by user during MetaMask confirmation.
                 to: contractAddress,
                 from: _walletAddress,
-                value: ethers.utils.hexlify(ethers.utils.parseEther("0.01".toString())), // Only required to send ether to the recipient from the initiating external account.
+                value: ethers.utils.hexlify(ethers.utils.parseEther((priceCKBX * idxs.length).toString())), // Only required to send ether to the recipient from the initiating external account.
                 data: data, // Optional, but used for defining smart contract creation and interaction.
                 // chainId: GlobalConstants.chain, // Used to prevent transaction reuse across blockchains. Auto-filled by MetaMask.
                 chainId: 1337,
@@ -319,14 +318,28 @@
             if (localStorage.getItem("connected") === "true") {
                 const balance = await getBalance();
                 console.log("BalanceOf CKBX: ", balance.toString());
+            } else if (window.ethereum.selectedAddress !== null) {
+                window.ethereum.selectedAddress = null;
+            }
+            if (window.ethereum.selectedAddress !== null) {
+                connectWallet();
+            } else if (localStorage.getItem("connected") === "true") {
+                localStorage.removeItem("connected");
+                localStorage.removeItem("walletAddress");
+                document.getElementById("connect").innerHTML = "Connect Wallet";
+            }
+
+
+            let last_page = localStorage.getItem("last-page");
+            if (last_page) {
+                document.getElementById("page").value = last_page;
             }
             await updateState();
         });
 
         async function updateState() {
-            console.log("get state");
             let pageNum = parseInt(document.getElementById("page").value) - 1;
-            getState(pageNum).then((state) => {
+            getState(pageNum * 1024, 1024).then((state) => {
                 for (let i = 0; i < 32; i++) {
                     for (let j = 0; j < 32; j++) {
                         let idx = i * 32 + j;
@@ -345,7 +358,15 @@
             });
         }
 
-        document.getElementById("page").addEventListener("change", updateState);
+        document.getElementById("page").addEventListener("change", async () => {
+            let val = parseInt(document.getElementById("page").value);
+            if (val < 1) {
+                document.getElementById("page").value = 1;
+            } else if (val > 1024) {
+                document.getElementById("page").value = 1024;
+            }
+            await updateState();
+        });
 
         setInterval(async () => {
             await updateState()
@@ -355,14 +376,18 @@
             let last_state = localStorage.getItem("last-state");
             last_state = last_state.split(",").map(function (x) { return x === "1" });
 
+            let idxs = []
+            let page = parseInt(document.getElementById("page").value) - 1; 
             for (let i = 0; i < 32; i++) {
                 for (let j = 0; j < 32; j++) {
                     let idx = i * 32 + j;
                     if (last_state[idx] !== document.getElementById(`c${idx}`).checked && document.getElementById(`container_${idx}`).classList.contains("selected")) {
-                        await flip(idx);
+                        idxs.push(idx + page * 1024);
                     }
                 }
             }
+
+            await flip(idxs);
         });
     </script>
 </body>

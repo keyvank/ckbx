@@ -107,9 +107,9 @@ CKBX_ABI = [
     "name": "flip",
     "inputs": [
       {
-        "name": "ind",
-        "type": "uint256",
-        "internalType": "uint256"
+        "name": "indices",
+        "type": "uint256[]",
+        "internalType": "uint256[]"
       }
     ],
     "outputs": [],
@@ -120,7 +120,12 @@ CKBX_ABI = [
     "name": "getState",
     "inputs": [
       {
-        "name": "page",
+        "name": "since",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
+      {
+        "name": "count",
         "type": "uint256",
         "internalType": "uint256"
       }
