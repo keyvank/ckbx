@@ -4,7 +4,6 @@ pragma solidity ^0.8.13;
 import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 import "./Console.sol";
 
-
 contract Ckbx is ERC20 {
     uint256 numCheckboxes;
     uint256 checkboxPrice;
@@ -13,10 +12,6 @@ contract Ckbx is ERC20 {
     address winner;
     mapping(uint256 => uint256) counter;
 
-    function decimals() public view virtual override returns (uint8) {
-        return 3;
-    }
-
     constructor(uint256 _numCheckboxes, uint256 _checkboxPrice) ERC20("ckbx.io", "CKBX") {
         require(_numCheckboxes > 0, "Invalid number of checkboxes!");
         require(_numCheckboxes % 1024 == 0, "Number of checkboxes must be a multiple of 1024!");
@@ -24,43 +19,40 @@ contract Ckbx is ERC20 {
         checkboxPrice = _checkboxPrice;
     }
 
-    function flip(uint256 ind) public payable {
+    function flip(uint256[] calldata indices) public payable {
+        require(msg.value == checkboxPrice * indices.length, "Invalid amount of ETH!");
+        require(winner == address(0), "The game has ended!");
+
         console.log(msg.sender);
         console.log(msg.value);
         console.log(checkboxPrice);
 
-        require(msg.value >= checkboxPrice, "Not enough ETH!");
-        require(winner == address(0), "The game has ended!");
-        require(ind < numCheckboxes, "Invalid checkbox!");
+        for (uint256 i = 0; i < indices.length; i++) {
+            uint256 ind = indices[i];
+            require(ind < numCheckboxes, "Invalid checkbox!");
 
-        _mint(msg.sender, 1000 >> counter[ind]);
-        counter[ind] += 1;
+            _mint(msg.sender, 1 ether >> counter[ind]);
+            counter[ind] += 1;
 
-        if (counter[ind] % 2 == 1) {
-            totalChecked += 1;
-            if (totalChecked == numCheckboxes) {
-                winner = msg.sender;
-                payable(winner).transfer(address(this).balance / 2);
+            if (counter[ind] % 2 == 1) {
+                totalChecked += 1;
+                if (totalChecked == numCheckboxes) {
+                    winner = msg.sender;
+                    payable(winner).transfer(address(this).balance / 2);
+                }
+            } else {
+                totalChecked -= 1;
             }
-        } else {
-            totalChecked -= 1;
         }
     }
 
-    function getState(uint256 page) public view returns (uint[] memory) {
-        require(page < numCheckboxes / 1024, "Invalid page number!");
-        uint256 start = page * 1024;
-        uint256 end = start + 1024;
-        if (end > numCheckboxes) {
-            end = numCheckboxes;
+    function getState(uint256 since, uint256 count) public view returns (uint256[] memory) {
+        require(since + count <= numCheckboxes, "Invalid checkbox indices!");
+        uint256[] memory state = new uint256[](count);
+        for (uint256 i = since; i < since + count; i++) {
+            state[i - since] = counter[i];
         }
-
-        uint[] memory states = new uint[](end - start);
-        for (uint256 i = start; i < end; i++) {
-            states[i - start] = counter[i];
-        }
-
-        return states;
+        return state;
     }
 
     function checkOut() public {
