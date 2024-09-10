@@ -61,6 +61,7 @@
         }
     </style>
     <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
+    <script src="./abi.js"></script>
 </head>
 
 <body>
@@ -133,7 +134,13 @@
             const _walletAddress = localStorage.getItem("walletAddress");
             document.getElementById("connect").innerHTML = `Connected: ${_walletAddress.slice(0, 6)}...${_walletAddress.slice(-4)}`;
         }
-        
+
+        async function getSigner() {
+            const provider = getProvider();
+            const signer = await provider.getSigner();
+            return signer;
+        }
+
         if (window.ethereum.selectedAddress !== null) {
             connectWallet();
         }
@@ -176,7 +183,7 @@
 
         document.getElementById("provider").addEventListener(
             "change",
-            function () {
+            async function () {
                 let provider = document.getElementById("provider").value;
                 console.log(`provider is ${provider}`);
                 setProvider(provider);
@@ -208,6 +215,88 @@
                 params: [{ chainId: '0x539' }],
             });
         }
+
+        const contractAddress = "0x45F97e4bEe19580807501C32a71D06f7F7c72f4f";
+
+        function getContract() {
+            const provider = getProvider();
+            const contract = new ethers.Contract(contractAddress, CKBX_ABI, provider);
+            return contract;
+        }
+
+        async function getBalance() {
+            const contract = getContract();
+            let _walletAddress = localStorage.getItem("walletAddress");
+            const balance = await contract.balanceOf(_walletAddress);
+            return balance;
+        }
+
+        async function getState(page) {
+            const contract = getContract();
+            const state = await contract.getState(page);
+            return state;
+        }
+
+        async function flip(idx) {              
+            page = parseInt(document.getElementById("page").value);
+            const contract = getContract();
+            
+            let _walletAddress = localStorage.getItem("walletAddress");
+            console.log("salam", _walletAddress);
+            
+            // const balance = await window.ethereum.request({method: 'eth_getBalance'})
+            // const provider = new ethers.providers.Web3Provider(window.ethereum);
+            let provider = getProvider();
+            let balance = await provider.getBalance(_walletAddress);
+            console.log("bal", balance.toBigInt()); 
+
+            let data = contract.interface.encodeFunctionData("flip", [idx]);
+            const transactionParameters = {
+                // nonce: '0x00', // ignored by MetaMask
+                // gasPrice: ethers.utils.hexlify(ethers.utils.parseEther(GlobalConstants.gasPrice)), // customizable by user during MetaMask confirmation.
+                // gas: GlobalConstants.gas, // customizable by user during MetaMask confirmation.
+                to: contractAddress,
+                from: _walletAddress,
+                value: ethers.utils.hexlify(ethers.utils.parseEther("0.01".toString())), // Only required to send ether to the recipient from the initiating external account.
+                data: data, // Optional, but used for defining smart contract creation and interaction.
+                // chainId: GlobalConstants.chain, // Used to prevent transaction reuse across blockchains. Auto-filled by MetaMask.
+                chainId: 1337,
+            }
+
+            console.log(transactionParameters);
+
+            const txHash = await ethereum.request({
+                method: 'eth_sendTransaction',
+                params: [transactionParameters],
+            });
+
+            // console.log("salam");       
+            // let idx = (page - 1) * 1024 + ind;
+            // let x = await window.ethereum.request({
+            //     method: 'eth_sendTransaction',
+            //     params: [{
+            //         to: contractAddress,
+            //         data: contract.interface.encodeFunctionData("flip", [idx]),
+            //     }],
+            // });
+
+            console.log("flip: ", txHash);
+        }
+
+        setInterval(async () => {
+            if (localStorage.getItem("connected") === "true") {
+                const balance = await getBalance();
+                console.log("BalanceOf CKBX: ", balance.toString());
+            }
+        }, 10000);
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            if (localStorage.getItem("connected") === "true") {
+                const balance = await getBalance();
+                console.log("BalanceOf CKBX: ", balance.toString());
+            }
+        });
+
     </script>
 </body>
 

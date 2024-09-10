@@ -2,6 +2,8 @@
 pragma solidity ^0.8.13;
 
 import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
+import "./Console.sol";
+
 
 contract Ckbx is ERC20 {
     uint256 numCheckboxes;
@@ -23,7 +25,11 @@ contract Ckbx is ERC20 {
     }
 
     function flip(uint256 ind) public payable {
-        require(msg.value == checkboxPrice, "Not enough ETH!");
+        console.log(msg.sender);
+        console.log(msg.value);
+        console.log(checkboxPrice);
+
+        require(msg.value >= checkboxPrice, "Not enough ETH!");
         require(winner == address(0), "The game has ended!");
         require(ind < numCheckboxes, "Invalid checkbox!");
 
