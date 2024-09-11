@@ -191,6 +191,8 @@
     </center>
 
     <script>
+        const contractAddress = "0xE1034A9b118A0ED83c1867Def5Cb200e1255e636";
+
         function setProvider(url) {
             localStorage.setItem("provider-url", url);
         }
@@ -294,6 +296,18 @@
                     method: 'wallet_switchEthereumChain',
                     params: [{ chainId: '0xA4B1' }],
                 });
+                await window.ethereum.request({
+                    method: 'wallet_watchAsset',
+                    params: {
+                        type: 'ERC20',
+                        options: {
+                            address: contractAddress,
+                            symbol: "CKBX",
+                            decimals: 18,
+                            image: "",
+                        },
+                    },
+                });
             } catch (error) {
                 if (error.code === 4902) {
                     try {
@@ -321,10 +335,8 @@
                     }
                 }
             }
-
         }
 
-        const contractAddress = "0xE1034A9b118A0ED83c1867Def5Cb200e1255e636";
         const priceCKBX = 0.0005;
 
         function getContract() {
