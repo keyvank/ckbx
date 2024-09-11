@@ -358,6 +358,19 @@ CKBX_ABI = [
   },
   {
     "type": "event",
+    "name": "Toggled",
+    "inputs": [
+      {
+        "name": "index",
+        "type": "uint256",
+        "indexed": false,
+        "internalType": "uint256"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
     "name": "Transfer",
     "inputs": [
       {
