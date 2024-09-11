@@ -326,7 +326,7 @@
                 const balance = await getBalance();
                 console.log("BalanceOf CKBX: ", balance.toString());
             }
-        }, 10000);
+        }, 2000);
 
         document.addEventListener("DOMContentLoaded", async () => {
             if (localStorage.getItem("connected") === "true") {
@@ -384,7 +384,7 @@
 
         setInterval(async () => {
             await updateState()
-        }, 10000);
+        }, 2000);
 
         document.getElementById("flip").addEventListener("click", async () => {
             let last_state = localStorage.getItem("last-state");
