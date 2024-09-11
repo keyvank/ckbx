@@ -5,7 +5,7 @@ import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 
 contract Ckbx is ERC20 {
     event Toggled(uint256 index);
-    
+
     uint256 public numCheckboxes;
     uint256 public checkboxPrice;
     uint256 public totalChecked;
@@ -13,7 +13,11 @@ contract Ckbx is ERC20 {
     address public winner;
     mapping(uint256 => uint256) public counter;
 
-    constructor(uint256 _numCheckboxes, uint256 _checkboxPrice, uint256 _numFreeFlip) ERC20("ckbx.xyz", "CKBX") {
+    constructor(
+        uint256 _numCheckboxes,
+        uint256 _checkboxPrice,
+        uint256 _numFreeFlip
+    ) ERC20("ckbx.xyz", "CKBX") {
         require(_numCheckboxes > 0, "Invalid number of checkboxes!");
         numCheckboxes = _numCheckboxes;
         checkboxPrice = _checkboxPrice;
@@ -23,7 +27,22 @@ contract Ckbx is ERC20 {
     }
 
     function flip(uint256[] memory indices) public payable {
-        require(msg.value == checkboxPrice * indices.length * (numFreeFlip > 0 ? 0 : 1), "Invalid amount of ETH!");
+        if (numFreeFlip == 0) {
+            require(
+                msg.value == checkboxPrice * indices.length,
+                "Invalid amount of ETH!"
+            );
+        } else {
+            if (numFreeFlip >= indices.length) {
+                require(msg.value == 0, "Invalid amount of ETH!");
+            } else {
+                uint256 remainder = indices.length - numFreeFlip;
+                require(
+                    msg.value == checkboxPrice * remainder,
+                    "Invalid amount of ETH!"
+                );
+            }
+        }
         require(winner == address(0), "The game has ended!");
 
         for (uint256 i = 0; i < indices.length; i++) {
@@ -46,12 +65,17 @@ contract Ckbx is ERC20 {
             }
         }
 
-        if (numFreeFlip > 0) {
-            numFreeFlip -= 1;
+        if (numFreeFlip > indices.length) {
+            numFreeFlip -= indices.length;
+        } else {
+            numFreeFlip = 0;
         }
     }
 
-    function getState(uint256 since, uint256 count) public view returns (uint256[] memory, uint256) {
+    function getState(
+        uint256 since,
+        uint256 count
+    ) public view returns (uint256[] memory, uint256) {
         require(since + count <= numCheckboxes, "Invalid checkbox indices!");
         uint256[] memory state = new uint256[](count);
         for (uint256 i = since; i < since + count; i++) {
@@ -65,7 +89,7 @@ contract Ckbx is ERC20 {
         require(winner != address(0), "Game has not ended yet!");
 
         uint256 bal = balanceOf(msg.sender);
-        uint256 eth = address(this).balance * bal / totalSupply();
+        uint256 eth = (address(this).balance * bal) / totalSupply();
         _burn(msg.sender, bal);
         payable(msg.sender).transfer(eth);
 
