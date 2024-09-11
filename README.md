@@ -1,15 +1,19 @@
 ## ✅ CKBX! ✅
 
-There are 1 million checkboxes. The game will finish when all checkboxes are checked!
+(NOTE: The project is inspired from the famous game: https://onemillioncheckboxes.com)
+
+There are 1 million checkboxes. The game will finish when all checkboxes are checked! The game is live on Arbitrum network: https://ckbx.xyz
 
 The rules are simple:
 
-- In order to check or uncheck a box, you must deposit some fixed amount of ETH to the game!
-- For each box you check/uncheck, some amount of CKBX will be minted for you, the amount is halved each time!
+- In order to check or uncheck a box, you must deposit some fixed amount of ETH to the game! (Currently 0.0005 ETH ~ 1 USD)
+- For each box you check/uncheck, some amount of CKBX will be minted for you (Initially 1.0 CKBX), the amount is halved each time!
 - When the game ends:
-    - The last person who check the last box will receive 50% of all ETHs deposited!
+    - The last person who checked the last box will receive 50% of all ETHs deposited! (Which will be at least 262 ETH ~ 500k USD)
     - The remaining 50% is distributed among CKBX holders!
 
-Either everyone wins or everyone loses!
+Since the rewards of each checkbox is halved on every toggle, the total supply of the CKBX token will be limited: there can at most be 2 million CKBX tokens!
 
-What will happen? Let's see!
+A CKBX holder somehow believes that the game will end eventually. His CKBX tokens are exchangable with real ETH after the game ends!
+
+Either everyone wins or everyone loses! What will happen? Let's see!
