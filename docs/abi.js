@@ -11,6 +11,11 @@ CKBX_ABI = [
         "name": "_checkboxPrice",
         "type": "uint256",
         "internalType": "uint256"
+      },
+      {
+        "name": "_numFreeFlip",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "nonpayable"
@@ -173,6 +178,11 @@ CKBX_ABI = [
         "name": "",
         "type": "uint256[]",
         "internalType": "uint256[]"
+      },
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
     "stateMutability": "view"
@@ -193,6 +203,19 @@ CKBX_ABI = [
   {
     "type": "function",
     "name": "numCheckboxes",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256",
+        "internalType": "uint256"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "numFreeFlip",
     "inputs": [],
     "outputs": [
       {

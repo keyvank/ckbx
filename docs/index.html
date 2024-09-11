@@ -83,8 +83,7 @@
                 <!-- page -->
                 <p style="display: none;" id="bal">$CKBX Balance:&nbsp; &nbsp;|&nbsp;</p>
                 <p style="display: inline-block;">
-                    Page: <input type="number" min="1" max="32" name="page"
-                        placeholder="page" id="page" value="1">
+                    Page: <input type="number" min="1" max="32" name="page" placeholder="page" id="page" value="1">
                 </p>
                 &nbsp;|&nbsp;
                 <!-- web3 provider -->
@@ -279,9 +278,10 @@
         async function getState(page, count) {
             const contract = getContract();
             const state = await contract.getState(page, count);
-            localStorage.setItem("last-state", state);
+            localStorage.setItem("last-state", state[0]);
+            localStorage.setItem("reminded-free-flips", parseInt(state[1].toBigInt()).toString());
             localStorage.setItem("last-page", page / 1024 + 1);
-            return state;
+            return state[0];
         }
 
         async function flip(idxs) {
@@ -295,15 +295,12 @@
             let provider = getProvider();
             let balance = await provider.getBalance(_walletAddress);
             let data = contract.interface.encodeFunctionData("flip", [idxs]);
+            let remindedFreeFlips = parseInt(localStorage.getItem("reminded-free-flips"));
             const transactionParameters = {
-                // nonce: '0x00', // ignored by MetaMask
-                // gasPrice: ethers.utils.hexlify(ethers.utils.parseEther(GlobalConstants.gasPrice)), // customizable by user during MetaMask confirmation.
-                // gas: GlobalConstants.gas, // customizable by user during MetaMask confirmation.
-                // gasLimit: 2100000,
                 to: contractAddress,
                 from: _walletAddress,
-                value: ethers.utils.hexlify(ethers.utils.parseEther((priceCKBX * idxs.length).toString())), // Only required to send ether to the recipient from the initiating external account.
-                data: data, // Optional, but used for defining smart contract creation and interaction.
+                value: ethers.utils.hexlify(ethers.utils.parseEther((priceCKBX * idxs.length * (remindedFreeFlips > 0 ? 0 : 1)).toString())),
+                data: data,
                 chainId: 42161,
             }
             transactionParameters.gas = ethers.utils.hexlify(await provider.estimateGas(transactionParameters));

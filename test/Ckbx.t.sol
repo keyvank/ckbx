@@ -9,7 +9,7 @@ contract FlipFlopTest is Test {
     function setUp() public {}
 
     function test_no_flip_after_game_ends() public {
-        Ckbx f = new Ckbx(3, 0.001 ether);
+        Ckbx f = new Ckbx(3, 0.001 ether, 0);
         uint256[] memory params = new uint256[](1);
 
         params[0] = 0;
@@ -49,7 +49,7 @@ contract FlipFlopTest is Test {
     }
 
     function test_cant_checkout_before_end() public {
-        Ckbx f = new Ckbx(3, 0.001 ether);
+        Ckbx f = new Ckbx(3, 0.001 ether, 0);
         uint256[] memory params = new uint256[](1);
 
         vm.assertEq(address(f).balance, 0 ether);
@@ -72,7 +72,7 @@ contract FlipFlopTest is Test {
     }
 
     function test_complete() public {
-        Ckbx f = new Ckbx(3, 0.001 ether);
+        Ckbx f = new Ckbx(3, 0.001 ether, 0);
         uint256[] memory params = new uint256[](1);
 
         vm.assertEq(address(f).balance, 0 ether);
@@ -99,7 +99,7 @@ contract FlipFlopTest is Test {
     }
 
     function test_multi_not_enough() public {
-        Ckbx f = new Ckbx(3, 0.001 ether);
+        Ckbx f = new Ckbx(3, 0.001 ether, 0);
         uint256[] memory params = new uint256[](2);
 
         params[0] = 0;
@@ -110,7 +110,7 @@ contract FlipFlopTest is Test {
     }
 
     function test_multi_enough() public {
-        Ckbx f = new Ckbx(3, 0.001 ether);
+        Ckbx f = new Ckbx(3, 0.001 ether, 0);
         uint256[] memory params = new uint256[](2);
 
         params[0] = 0;
@@ -120,7 +120,7 @@ contract FlipFlopTest is Test {
     }
 
     function test_multi_flow() public {
-        Ckbx f = new Ckbx(3, 0.001 ether);
+        Ckbx f = new Ckbx(3, 0.001 ether, 0);
         uint256[] memory params = new uint256[](2);
 
         params[0] = 0;
@@ -157,7 +157,7 @@ contract FlipFlopTest is Test {
     }
 
     function test_get_status() public {
-        Ckbx f = new Ckbx(6, 0.001 ether);
+        Ckbx f = new Ckbx(6, 0.001 ether, 0);
         uint256[] memory params = new uint256[](1);
 
         params[0] = 1;
@@ -172,17 +172,17 @@ contract FlipFlopTest is Test {
         params[0] = 3;
         f.flip{value: 0.001 ether}(params);
 
-        uint256[] memory out1 = f.getState(0, 3);
+        (uint256[] memory out1, uint256 free1) = f.getState(0, 3);
         vm.assertEq(out1[0], 0);
         vm.assertEq(out1[1], 1);
         vm.assertEq(out1[2], 0);
 
-        uint256[] memory out2 = f.getState(3, 3);
+        (uint256[] memory out2, uint256 free2) = f.getState(3, 3);
         vm.assertEq(out2[0], 2);
         vm.assertEq(out2[1], 0);
         vm.assertEq(out2[2], 1);
 
-        uint256[] memory out3 = f.getState(2, 3);
+        (uint256[] memory out3, uint256 free3) = f.getState(2, 3);
         vm.assertEq(out3[0], 0);
         vm.assertEq(out3[1], 2);
         vm.assertEq(out3[2], 0);
@@ -196,7 +196,7 @@ contract FlipFlopTest is Test {
         payable(address(2345)).transfer(1 ether);
         payable(address(3456)).transfer(1 ether);
 
-        Ckbx f = new Ckbx(3, 0.001 ether);
+        Ckbx f = new Ckbx(3, 0.001 ether, 0);
         uint256[] memory params = new uint256[](1);
 
         vm.assertEq(address(1234).balance, 1 ether);
@@ -261,7 +261,7 @@ contract FlipFlopTest is Test {
             payable(address(uint160(i))).transfer(1 ether);   
         }
 
-        Ckbx f = new Ckbx(100, 0.001 ether);
+        Ckbx f = new Ckbx(100, 0.001 ether, 0);
 
         for (uint256 i = 10; i < 110; i++) {
             vm.startPrank(address(uint160(i)));
@@ -289,6 +289,51 @@ contract FlipFlopTest is Test {
                 vm.assertEq(address(uint160(i)).balance / 10 * 10, 1 ether - 0.001 ether + 0.05 ether + 0.000454545454545450 ether);
             }
         }
+    }
+
+    function test_add_value_on_free_should_fail() public {
+        Ckbx f = new Ckbx(3, 0.001 ether, 1);
+
+        vm.startPrank(address(1234));
+        vm.expectRevert();
+        f.flip{value: 0.001 ether}(new uint256[](1));
+        vm.stopPrank();
+    }
+
+    function test_value_zero_on_free_should_pass() public {
+        Ckbx f = new Ckbx(3, 0.001 ether, 1);
+
+        vm.startPrank(address(1234));
+        f.flip{value: 0 ether}(new uint256[](1));
+        vm.stopPrank();
+    }
+
+    function test_free_flip() public {
+        Ckbx f = new Ckbx(3, 0.001 ether, 2);
+
+        payable(address(1234)).transfer(1 ether);
+        payable(address(2345)).transfer(1 ether);
+        payable(address(3456)).transfer(1 ether);
+
+        vm.startPrank(address(1234));
+        f.flip{value: 0 ether}(new uint256[](1));
+        vm.stopPrank();
+        vm.assertEq(address(1234).balance, 1 ether);
+
+        vm.startPrank(address(2345));
+        f.flip{value: 0 ether}(new uint256[](1));
+        vm.stopPrank();
+        vm.assertEq(address(2345).balance, 1 ether);
+
+        vm.startPrank(address(3456));
+        vm.expectRevert();
+        f.flip{value: 0 ether}(new uint256[](1));
+        vm.stopPrank();
+
+        vm.startPrank(address(3456));
+        f.flip{value: 0.001 ether}(new uint256[](1));
+        vm.stopPrank();
+        vm.assertEq(address(3456).balance, 1 ether - 0.001 ether);
     }
 
     // Allow the game contract to pay back the test contract
