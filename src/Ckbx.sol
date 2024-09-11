@@ -4,6 +4,8 @@ pragma solidity ^0.8.13;
 import "openzeppelin-contracts/contracts/token/ERC20/ERC20.sol";
 
 contract Ckbx is ERC20 {
+    event Toggled(uint256 index);
+    
     uint256 public numCheckboxes;
     uint256 public checkboxPrice;
     uint256 public totalChecked;
@@ -28,6 +30,8 @@ contract Ckbx is ERC20 {
 
             _mint(msg.sender, 1 ether >> counter[ind]);
             counter[ind] += 1;
+
+            emit Toggled(ind);
 
             if (counter[ind] % 2 == 1) {
                 totalChecked += 1;
