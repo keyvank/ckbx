@@ -9,3 +9,7 @@ out/
 
 # Dotenv file
 .env
+
+index-local.html
+
+.vscode/

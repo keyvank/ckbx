@@ -159,10 +159,6 @@
             return signer;
         }
 
-        if (window.ethereum.selectedAddress !== null) {
-            connectWallet();
-        }
-
         for (let i = 0; i < 32; i++) {
             let div = document.createElement("div");
             div.id = `div${i}`;
@@ -220,27 +216,43 @@
                 return;
             }
             const provider = new ethers.providers.Web3Provider(window.ethereum);
-            await window.ethereum.request({
-                method: 'wallet_addEthereumChain',
-                params: [{
-                    chainId: '0xA4B1',
-                    chainName: 'Arbitrum',
-                    nativeCurrency: {
-                        name: 'Ethereum',
-                        symbol: 'ETH',
-                        decimals: 18
-                    },
-                    rpcUrls: ['https://arb1.arbitrum.io/rpc'],
-                    blockExplorerUrls: ['https://arbiscan.io']
-                }],
-            });
-            await window.ethereum.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: '0xA4B1' }],
-            });
+
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0xA4B1' }],
+                });
+            } catch (error) {
+                if (error.code === 4902) {
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [{
+                                chainId: '0xA4B1',
+                                chainName: 'Arbitrum One',
+                                nativeCurrency: {
+                                    name: 'Ether',
+                                    symbol: 'ETH',
+                                    decimals: 18,
+                                },
+                                rpcUrls: ['https://arb1.arbitrum.io/rpc'],
+                                blockExplorerUrls: ['https://arbiscan.io'],
+                            }],
+                        });
+
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: '0xA4B1' }],
+                        });
+                    } catch (addError) {
+                        console.error(addError);
+                    }
+                }
+            }
+
         }
 
-        const contractAddress = "0xa6f4fD266f970Ae3976c4dC6E940D49416C673A6";
+        const contractAddress = "0xF46778b5d51c29543d52b8C386f803a6bD72127b";
         const priceCKBX = 0.0005;
 
         function getContract() {
@@ -283,12 +295,12 @@
                 from: _walletAddress,
                 value: ethers.utils.hexlify(ethers.utils.parseEther((priceCKBX * idxs.length).toString())), // Only required to send ether to the recipient from the initiating external account.
                 data: data, // Optional, but used for defining smart contract creation and interaction.
-                // chainId: GlobalConstants.chain, // Used to prevent transaction reuse across blockchains. Auto-filled by MetaMask.
                 chainId: 42161,
             }
 
             console.log(transactionParameters);
 
+            await connectWallet();
             const txHash = await ethereum.request({
                 method: 'eth_sendTransaction',
                 params: [transactionParameters],
@@ -321,14 +333,14 @@
             } else if (window.ethereum.selectedAddress !== null) {
                 window.ethereum.selectedAddress = null;
             }
-            if (window.ethereum.selectedAddress !== null) {
-                connectWallet();
-            } else if (localStorage.getItem("connected") === "true") {
+            if (window.ethereum.selectedAddress === null && localStorage.getItem("connected") === "true") {
                 localStorage.removeItem("connected");
                 localStorage.removeItem("walletAddress");
                 document.getElementById("connect").innerHTML = "Connect Wallet";
+            } else if (localStorage.getItem("connected") === "true") {
+                const _walletAddress = localStorage.getItem("walletAddress");
+                document.getElementById("connect").innerHTML = `Connected: ${_walletAddress.slice(0, 6)}...${_walletAddress.slice(-4)}`;
             }
-
 
             let last_page = localStorage.getItem("last-page");
             if (last_page) {
@@ -377,7 +389,7 @@
             last_state = last_state.split(",").map(function (x) { return x === "1" });
 
             let idxs = []
-            let page = parseInt(document.getElementById("page").value) - 1; 
+            let page = parseInt(document.getElementById("page").value) - 1;
             for (let i = 0; i < 32; i++) {
                 for (let j = 0; j < 32; j++) {
                     let idx = i * 32 + j;
