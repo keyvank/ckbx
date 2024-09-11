@@ -291,6 +291,7 @@
                 // nonce: '0x00', // ignored by MetaMask
                 // gasPrice: ethers.utils.hexlify(ethers.utils.parseEther(GlobalConstants.gasPrice)), // customizable by user during MetaMask confirmation.
                 // gas: GlobalConstants.gas, // customizable by user during MetaMask confirmation.
+                gasLimit: ethers.utils.hexlify(ethers.utils.bigNumberify(2100000)),
                 to: contractAddress,
                 from: _walletAddress,
                 value: ethers.utils.hexlify(ethers.utils.parseEther((priceCKBX * idxs.length).toString())), // Only required to send ether to the recipient from the initiating external account.
