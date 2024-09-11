@@ -79,9 +79,11 @@
     <center>
         <h3>FlipFlop</h3>
         <div class="row justify-content-between" style="padding: 0; margin: 0;">
-            <div class="col-6">
+            <div class="col-10">
                 <!-- page -->
-                <p style="display: inline-block;">Page: <input type="number" min="1" max="32" name="page"
+                <p style="display: none;" id="bal">$CKBX Balance:&nbsp; &nbsp;|&nbsp;</p>
+                <p style="display: inline-block;">
+                    Page: <input type="number" min="1" max="32" name="page"
                         placeholder="page" id="page" value="1">
                 </p>
                 &nbsp;|&nbsp;
@@ -265,6 +267,12 @@
             const contract = getContract();
             let _walletAddress = localStorage.getItem("walletAddress");
             const balance = await contract.balanceOf(_walletAddress);
+
+            let prettierBalance = parseFloat(balance.toBigInt()) / 1e18;
+            document.getElementById("bal").innerHTML = `$CKBX Balance: ${(Math.round(prettierBalance * 1000) / 1000).toFixed(3)} |`;
+            document.getElementById("bal").style.display = "inline-block";
+            document.getElementById("bal").style.fontWeight = "bold";
+
             return balance;
         }
 

@@ -14,6 +14,8 @@ contract Ckbx is ERC20 {
         require(_numCheckboxes > 0, "Invalid number of checkboxes!");
         numCheckboxes = _numCheckboxes;
         checkboxPrice = _checkboxPrice;
+
+        _mint(msg.sender, 1 ether * (_numCheckboxes / 10));
     }
 
     function flip(uint256[] memory indices) public payable {
