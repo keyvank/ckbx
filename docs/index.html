@@ -281,7 +281,7 @@
             const contract = getContract();
             const state = await contract.getState(page, count);
             localStorage.setItem("last-state", state[0]);
-            localStorage.setItem("reminded-free-flips", parseInt(state[1].toBigInt()).toString());
+            localStorage.setItem("remained-free-flips", parseInt(state[1].toBigInt()).toString());
             localStorage.setItem("last-page", page / 1024 + 1);
             return state[0];
         }
@@ -292,19 +292,26 @@
 
             let _walletAddress = localStorage.getItem("walletAddress");
 
-            // const balance = await window.ethereum.request({method: 'eth_getBalance'})
-            // const provider = new ethers.providers.Web3Provider(window.ethereum);
             let provider = getProvider();
             let balance = await provider.getBalance(_walletAddress);
             let data = contract.interface.encodeFunctionData("flip", [idxs]);
-            let remindedFreeFlips = parseInt(localStorage.getItem("reminded-free-flips"));
+            let remainedFreeFlips = parseInt(localStorage.getItem("remained-free-flips"));
+
+            let value = priceCKBX * idxs.length;
+
+            if (remainedFreeFlips >= idxs.length) {
+                value = 0;
+            } else {
+                value = priceCKBX * (idxs.length - remainedFreeFlips);
+            }
+
             const transactionParameters = {
                 to: contractAddress,
                 from: _walletAddress,
-                value: ethers.utils.hexlify(ethers.utils.parseEther((priceCKBX * idxs.length * (remindedFreeFlips > 0 ? 0 : 1)).toString())),
+                value: ethers.utils.hexlify(ethers.utils.parseEther((value).toString())),
                 data: data,
                 chainId: 42161,
-            }
+            };
             transactionParameters.gas = ethers.utils.hexlify(await provider.estimateGas(transactionParameters));
 
             console.log(transactionParameters);
