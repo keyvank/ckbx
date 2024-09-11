@@ -9,38 +9,28 @@ contract Ckbx is ERC20 {
     uint256 public numCheckboxes;
     uint256 public checkboxPrice;
     uint256 public totalChecked;
-    uint256 public numFreeFlip;
+    uint256 public numFreeFlips;
     address public winner;
     mapping(uint256 => uint256) public counter;
 
-    constructor(
-        uint256 _numCheckboxes,
-        uint256 _checkboxPrice,
-        uint256 _numFreeFlip
-    ) ERC20("ckbx.xyz", "CKBX") {
+    constructor(uint256 _numCheckboxes, uint256 _checkboxPrice, uint256 _numFreeFlips) ERC20("ckbx.xyz", "CKBX") {
         require(_numCheckboxes > 0, "Invalid number of checkboxes!");
         numCheckboxes = _numCheckboxes;
         checkboxPrice = _checkboxPrice;
-        numFreeFlip = _numFreeFlip;
+        numFreeFlips = _numFreeFlips;
 
         _mint(msg.sender, 1 ether * (_numCheckboxes / 10));
     }
 
     function flip(uint256[] memory indices) public payable {
-        if (numFreeFlip == 0) {
-            require(
-                msg.value == checkboxPrice * indices.length,
-                "Invalid amount of ETH!"
-            );
+        if (numFreeFlips == 0) {
+            require(msg.value == checkboxPrice * indices.length, "Invalid amount of ETH!");
         } else {
-            if (numFreeFlip >= indices.length) {
+            if (numFreeFlips >= indices.length) {
                 require(msg.value == 0, "Invalid amount of ETH!");
             } else {
-                uint256 remainder = indices.length - numFreeFlip;
-                require(
-                    msg.value == checkboxPrice * remainder,
-                    "Invalid amount of ETH!"
-                );
+                uint256 remainder = indices.length - numFreeFlips;
+                require(msg.value == checkboxPrice * remainder, "Invalid amount of ETH!");
             }
         }
         require(winner == address(0), "The game has ended!");
@@ -65,24 +55,21 @@ contract Ckbx is ERC20 {
             }
         }
 
-        if (numFreeFlip > indices.length) {
-            numFreeFlip -= indices.length;
+        if (numFreeFlips > indices.length) {
+            numFreeFlips -= indices.length;
         } else {
-            numFreeFlip = 0;
+            numFreeFlips = 0;
         }
     }
 
-    function getState(
-        uint256 since,
-        uint256 count
-    ) public view returns (uint256[] memory, uint256) {
+    function getState(uint256 since, uint256 count) public view returns (uint256[] memory, uint256) {
         require(since + count <= numCheckboxes, "Invalid checkbox indices!");
         uint256[] memory state = new uint256[](count);
         for (uint256 i = since; i < since + count; i++) {
             state[i - since] = counter[i];
         }
 
-        return (state, numFreeFlip);
+        return (state, numFreeFlips);
     }
 
     function checkOut() public returns (uint256) {

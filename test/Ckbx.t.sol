@@ -218,10 +218,7 @@ contract FlipFlopTest is Test {
         params[0] = 2;
         f.flip{value: 0.001 ether}(params);
         vm.stopPrank();
-        vm.assertEq(
-            address(3456).balance,
-            1 ether - 0.001 ether + 0.0015 ether
-        );
+        vm.assertEq(address(3456).balance, 1 ether - 0.001 ether + 0.0015 ether);
 
         vm.startPrank(address(1234));
         f.checkOut();
@@ -242,23 +239,14 @@ contract FlipFlopTest is Test {
         f.checkOut();
         vm.stopPrank();
 
-        vm.assertEq(
-            address(1234).balance,
-            1 ether - 0.001 ether + 0.0005 ether
-        );
-        vm.assertEq(
-            address(2345).balance,
-            1 ether - 0.001 ether + 0.0005 ether
-        );
-        vm.assertEq(
-            address(3456).balance,
-            1 ether - 0.001 ether + 0.0015 ether + 0.0005 ether
-        );
+        vm.assertEq(address(1234).balance, 1 ether - 0.001 ether + 0.0005 ether);
+        vm.assertEq(address(2345).balance, 1 ether - 0.001 ether + 0.0005 ether);
+        vm.assertEq(address(3456).balance, 1 ether - 0.001 ether + 0.0015 ether + 0.0005 ether);
     }
 
     function test_checkout_large_game() public {
         for (uint256 i = 10; i < 110; i++) {
-            payable(address(uint160(i))).transfer(1 ether);   
+            payable(address(uint160(i))).transfer(1 ether);
         }
 
         Ckbx f = new Ckbx(100, 0.001 ether, 0);
@@ -284,9 +272,12 @@ contract FlipFlopTest is Test {
 
         for (uint256 i = 10; i < 110; i++) {
             if (i < 109) {
-                vm.assertEq(address(uint160(i)).balance / 10 * 10, 1 ether - 0.001 ether + 0.000454545454545450 ether);
+                vm.assertEq(address(uint160(i)).balance / 10 * 10, 1 ether - 0.001 ether + 0.00045454545454545 ether);
             } else {
-                vm.assertEq(address(uint160(i)).balance / 10 * 10, 1 ether - 0.001 ether + 0.05 ether + 0.000454545454545450 ether);
+                vm.assertEq(
+                    address(uint160(i)).balance / 10 * 10,
+                    1 ether - 0.001 ether + 0.05 ether + 0.00045454545454545 ether
+                );
             }
         }
     }
