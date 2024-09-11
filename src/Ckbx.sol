@@ -12,7 +12,7 @@ contract Ckbx is ERC20 {
     address public winner;
     mapping(uint256 => uint256) public counter;
 
-    constructor(uint256 _numCheckboxes, uint256 _checkboxPrice) ERC20("ckbx.io", "CKBX") {
+    constructor(uint256 _numCheckboxes, uint256 _checkboxPrice) ERC20("ckbx.xyz", "CKBX") {
         require(_numCheckboxes > 0, "Invalid number of checkboxes!");
         numCheckboxes = _numCheckboxes;
         checkboxPrice = _checkboxPrice;
