@@ -1,0 +1,406 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FlipFlop</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz"
+        crossorigin="anonymous"></script>
+
+    <style>
+        center {
+            padding: 0;
+            margin: 0;
+            width: 96%;
+        }
+
+        input {
+            padding: 0;
+            margin: 0;
+            width: 2vw;
+            height: 2.5vh;
+        }
+
+        div {
+            padding: 1px;
+        }
+
+        h3 {
+            padding: 0;
+            margin: 0;
+        }
+
+        /* #page-container {
+            display: flex;
+            justify-content: left;
+            align-items: center;
+            margin: 0;
+            padding: 0;
+            height: 20px;
+        }
+
+        
+        #connect {
+            display: flex;
+            justify-content: right;
+            align-items: center;
+            float: right;
+            } */
+
+        #page {
+            width: 70px;
+            height: 20px;
+        }
+
+        #provider {
+            width: 250px;
+            height: 20px;
+        }
+
+        #flip {
+            width: 80px;
+        }
+
+        .selected {
+            border: 1px solid yellow;
+            background-color: aqua;
+        }
+    </style>
+    <script src="https://cdn.ethers.io/lib/ethers-5.2.umd.min.js" type="application/javascript"></script>
+    <script src="./abi.js"></script>
+</head>
+
+<body>
+
+    <center>
+        <h3>FlipFlop</h3>
+        <div class="row justify-content-between" style="padding: 0; margin: 0;">
+            <div class="col-6">
+                <!-- page -->
+                <p style="display: inline-block;">Page: <input type="number" min="1" max="32" name="page"
+                        placeholder="page" id="page" value="1">
+                </p>
+                &nbsp;|&nbsp;
+                <!-- web3 provider -->
+                <p style="display: inline-block;">Web3 Provider:
+                    <input type="url" name="provider" placeholder="web3 provider" id="provider"
+                        value="http://127.0.0.1:8545" list="providers">
+                    <!-- value="https://arb1.arbitrum.io/rpc" list="providers"> -->
+                    <!-- <datalist id="providers">
+                        <option>https://eth.llamarpc.com</option>
+                        <option>http://localhost:8545</option>
+                        <option>X3</option>
+                        <option>X4</option>
+                    </datalist> -->
+                </p>
+            </div>
+            <div class="col-2">
+                <button class="btn btn-primary btn-sm" id="connect" style="margin: 0;" onclick="connectWallet()">Connect
+                    Wallet</button>
+            </div>
+        </div>
+        <!-- <div id="page-container">
+            <p>page:&nbsp;</p>
+            <input type="number" min="1" max="32" name="page" placeholder="page" id="page" value="1">
+            &nbsp;|&nbsp;
+            <p>web3 provider:&nbsp;</p>
+            <input type="url" name="provider" placeholder="web3 provider" id="provider"
+                value="https://eth.llamarpc.com">
+            <button id="connect">connect</button>
+        </div> -->
+        <hr>
+        <div class="row justify-content-end">
+            <div id="render" class="col-11"></div>
+            <div class="col-1">
+                <button id="flip" class="btn btn-primary btn-sm">flip</button>
+            </div>
+        </div>
+    </center>
+
+    <script>
+        function setProvider(url) {
+            localStorage.setItem("provider-url", url);
+        }
+
+        if (!localStorage.getItem("provider-url")) {
+            let url = document.getElementById("provider").value;
+            setProvider(url);
+        }
+
+        function getProvider() {
+            let url = localStorage.getItem("provider-url");
+            console.log("getProvider", url);
+            return new ethers.providers.JsonRpcProvider(url);
+        }
+
+        async function connectWallet() {
+            changeNetwork();
+            if (window.ethereum.selectedAddress === null) {
+                const provider = new ethers.providers.Web3Provider(window.ethereum);
+                await provider.send('eth_requestAccounts', []);
+                const signer = await provider.getSigner();
+                const _walletAddress = await signer.getAddress();
+
+                localStorage.setItem("connected", "true");
+                localStorage.setItem("walletAddress", _walletAddress);
+
+            }
+
+            const _walletAddress = localStorage.getItem("walletAddress");
+            document.getElementById("connect").innerHTML = `Connected: ${_walletAddress.slice(0, 6)}...${_walletAddress.slice(-4)}`;
+        }
+
+        async function getSigner() {
+            const provider = getProvider();
+            const signer = await provider.getSigner();
+            return signer;
+        }
+
+        for (let i = 0; i < 32; i++) {
+            let div = document.createElement("div");
+            div.id = `div${i}`;
+            for (let j = 0; j < 32; j++) {
+                let input = document.createElement("input");
+                input.type = "checkbox";
+                input.name = `c${i * 32 + j}`;
+                input.id = `c${i * 32 + j}`;
+                input.addEventListener(
+                    "change",
+                    function () {
+                        console.log(`c${i * 32 + j} is ${input.checked}`);
+
+                        let last_state = localStorage.getItem("last-state");
+                        last_state = last_state.split(",").map(function (x) { return x === "1" });
+
+                        let idx = i * 32 + j;
+                        if (last_state[idx] !== input.checked) {
+                            document.getElementById(`container_${i * 32 + j}`).classList.add("selected");
+                        }
+
+                        // localStorage.setItem(`c${idx}`, input.checked);
+                    }
+                );
+
+                let container = document.createElement("div");
+                container.id = `container_${i * 32 + j}`;
+                container.style = "display: inline-block;";
+                container.appendChild(input);
+                div.appendChild(container);
+            }
+            document.getElementById("render").appendChild(div);
+        }
+
+        document.getElementById("page").addEventListener(
+            "change",
+            function () {
+                let page = document.getElementById("page").value;
+                console.log(`page is ${page}`);
+            }
+        );
+
+        document.getElementById("provider").addEventListener(
+            "change",
+            async function () {
+                let provider = document.getElementById("provider").value;
+                console.log(`provider is ${provider}`);
+                setProvider(provider);
+            }
+        );
+
+        async function changeNetwork() {
+            if (typeof window === 'undefined' || typeof window.ethereum === 'undefined') {
+                console.log("install metamask first");
+                return;
+            }
+            const provider = new ethers.providers.Web3Provider(window.ethereum);
+
+            try {
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: '0x539' }],
+                });
+            } catch (error) {
+                if (error.code === 4902) {
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [{
+                                chainId: '0x539',
+                                chainName: 'Ganache Local',
+                                nativeCurrency: {
+                                    name: 'Ether',
+                                    symbol: 'ETH',
+                                    decimals: 18,
+                                },
+                                rpcUrls: ['http://127.0.0.1:8545'],
+                                blockExplorerUrls: ['http://127.0.0.1:8545'],
+                            }],
+                        });
+
+                        await window.ethereum.request({
+                            method: 'wallet_switchEthereumChain',
+                            params: [{ chainId: '0x539' }],
+                        });
+                    } catch (addError) {
+                        console.error(addError);
+                    }
+                }
+            }
+
+        }
+
+        const contractAddress = "0x45077109130e7F750bd5a4BC8ad94F859f6CA745";
+        const priceCKBX = 0.0005;
+
+        function getContract() {
+            const provider = getProvider();
+            const contract = new ethers.Contract(contractAddress, CKBX_ABI, provider);
+            return contract;
+        }
+
+        async function getBalance() {
+            const contract = getContract();
+            let _walletAddress = localStorage.getItem("walletAddress");
+            const balance = await contract.balanceOf(_walletAddress);
+            return balance;
+        }
+
+        async function getState(page, count) {
+            const contract = getContract();
+            const state = await contract.getState(page, count);
+            localStorage.setItem("last-state", state[0]);
+            localStorage.setItem("reminded-free-flips", parseInt(state[1].toBigInt()).toString());
+            localStorage.setItem("last-page", page / 1024 + 1);
+            return state[0];
+        }
+
+        async function flip(idxs) {
+            page = parseInt(document.getElementById("page").value);
+            const contract = getContract();
+
+            let _walletAddress = localStorage.getItem("walletAddress");
+
+            // const balance = await window.ethereum.request({method: 'eth_getBalance'})
+            // const provider = new ethers.providers.Web3Provider(window.ethereum);
+            let provider = getProvider();
+            let balance = await provider.getBalance(_walletAddress);
+            let data = contract.interface.encodeFunctionData("flip", [idxs]);
+            let remindedFreeFlips = parseInt(localStorage.getItem("reminded-free-flips"));
+            const transactionParameters = {
+                to: contractAddress,
+                from: _walletAddress,
+                value: ethers.utils.hexlify(ethers.utils.parseEther((priceCKBX * idxs.length * (remindedFreeFlips > 0 ? 0 : 1)).toString())),
+                data: data,
+                chainId: 1337,
+            }   
+            console.log(transactionParameters);
+
+            await connectWallet();
+            const txHash = await ethereum.request({
+                method: 'eth_sendTransaction',
+                params: [transactionParameters],
+            });
+
+            // console.log("salam");       
+            // let idx = (page - 1) * 1024 + ind;
+            // let x = await window.ethereum.request({
+            //     method: 'eth_sendTransaction',
+            //     params: [{
+            //         to: contractAddress,
+            //         data: contract.interface.encodeFunctionData("flip", [idx]),
+            //     }],
+            // });
+
+            console.log("flip: ", txHash);
+        }
+
+        setInterval(async () => {
+            if (localStorage.getItem("connected") === "true") {
+                const balance = await getBalance();
+                console.log("BalanceOf CKBX: ", balance.toString());
+            }
+        }, 10000);
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            if (localStorage.getItem("connected") === "true") {
+                const balance = await getBalance();
+                console.log("BalanceOf CKBX: ", balance.toString());
+            } else if (window.ethereum.selectedAddress !== null) {
+                window.ethereum.selectedAddress = null;
+            }
+            if (window.ethereum.selectedAddress === null && localStorage.getItem("connected") === "true") {
+                localStorage.removeItem("connected");
+                localStorage.removeItem("walletAddress");
+                document.getElementById("connect").innerHTML = "Connect Wallet";
+            } else if (localStorage.getItem("connected") === "true") {
+                const _walletAddress = localStorage.getItem("walletAddress");
+                document.getElementById("connect").innerHTML = `Connected: ${_walletAddress.slice(0, 6)}...${_walletAddress.slice(-4)}`;
+            }
+
+            let last_page = localStorage.getItem("last-page");
+            if (last_page) {
+                document.getElementById("page").value = last_page;
+            }
+            await updateState();
+        });
+
+        async function updateState() {
+            let pageNum = parseInt(document.getElementById("page").value) - 1;
+            getState(pageNum * 1024, 1024).then((state) => {
+                for (let i = 0; i < 32; i++) {
+                    for (let j = 0; j < 32; j++) {
+                        let idx = i * 32 + j;
+                        let checked = state[idx].mod(2) == 1;
+
+                        if (document.getElementById(`container_${idx}`).classList.contains("selected") &&
+                            document.getElementById(`c${idx}`).checked === checked) {
+                            document.getElementById(`container_${idx}`).classList.remove("selected");
+                        } else if (document.getElementById(`container_${idx}`).classList.contains("selected") &&
+                            document.getElementById(`c${idx}`).checked !== checked) {
+                            continue
+                        }
+                        document.getElementById(`c${idx}`).checked = checked;
+                    }
+                }
+            });
+        }
+
+        document.getElementById("page").addEventListener("change", async () => {
+            let val = parseInt(document.getElementById("page").value);
+            if (val < 1) {
+                document.getElementById("page").value = 1;
+            } else if (val > 1024) {
+                document.getElementById("page").value = 1024;
+            }
+            await updateState();
+        });
+
+        setInterval(async () => {
+            await updateState()
+        }, 10000);
+
+        document.getElementById("flip").addEventListener("click", async () => {
+            let last_state = localStorage.getItem("last-state");
+            last_state = last_state.split(",").map(function (x) { return x === "1" });
+
+            let idxs = []
+            let page = parseInt(document.getElementById("page").value) - 1;
+            for (let i = 0; i < 32; i++) {
+                for (let j = 0; j < 32; j++) {
+                    let idx = i * 32 + j;
+                    if (last_state[idx] !== document.getElementById(`c${idx}`).checked && document.getElementById(`container_${idx}`).classList.contains("selected")) {
+                        idxs.push(idx + page * 1024);
+                    }
+                }
+            }
+
+            await flip(idxs);
+        });
+    </script>
+</body>
+
+</html>
